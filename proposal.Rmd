@@ -19,7 +19,18 @@ library(anyflights)
 
 
 ```{r}
-nycflights13::airlines
+airlines <- nycflights13::airlines
+weather <- nycflights13::weather
+airports <- nycflights13::airports
+planes <- nycflights13::planes
+flight <- nycflights13::flights
+flight
+airlines
+
+planes
+
+weather$visib
+hist(weather$wind_speed)
 ```
 
 
