@@ -1,5 +1,6 @@
 ---
 title: "Stat 167: Project Proposal | G14 - ICE CREAM"
+author: "Lydia Niu, Zoe Shum, Aparna Petluri, Alexis Castaneda, Jenny Zhang, Gracelynne Mohan"
 output: pdf_document
 date: "2025-04-28"
 ---
@@ -7,13 +8,14 @@ date: "2025-04-28"
 ```{r setup, include=FALSE, collapse=TRUE, echo=FALSE}
 # install.packages("nycflights13")
 library(nycflights13)
+library(ggplot2)
+library(dplyr)
+library(nycflights13)
 ```
 
 # **Introduction**
 
-Handling the heavy air traffic above New York, the John F. Kennedy International Airport (JFK), LaGuardia Airport (LGA), and Newark Liberty International Airport (EWR) manage immense flight operations throughout the year. Given a dataset regarding the dynamic flight patterns between these three airports, we hope to explore the various factors that may affect flight delays and flight volume - amount of flights. The overall question we want to answer is: **“What factors influence flight volume and does this affect delay patterns across New York City's major airports (JFK, LGA, and EWR)?”** We hypothesize that weather conditions, such as temperature or wind speed, play a significant role in the occurrence of delays among the three airports. By analyzing the [nycflights13](https://nycflights13.tidyverse.org/) dataset, we aim to provide valuable insight to travelers, as well as airline and airport administrators, as to flight frequency and delays in the New York metropolitan area. 
-
-\
+Handling the heavy air traffic above New York, the John F. Kennedy International Airport (JFK), LaGuardia Airport (LGA), and Newark Liberty International Airport (EWR) manage immense flight operations throughout the year. Given a dataset regarding the dynamic flight patterns between these three airports, we hope to explore the various factors that may affect flight delays and flight volume - amount of flights. The overall question we want to answer is: **“What factors influence flight volume and does this affect delay patterns across New York City's major airports (JFK, LGA, and EWR)?”** We hypothesize that weather conditions, such as temperature or wind speed, play a significant role in the occurrence of delays among the three airports. By analyzing the [nycflights13](https://nycflights13.tidyverse.org/) dataset, we aim to provide valuable insight to travelers, as well as airline and airport administrators, as to flight frequency and delays in the New York metropolitan area. \
 
 ## **Coherent Questions**
 
@@ -35,11 +37,11 @@ To help answer our main question, we aim to answer the following: \
 
 For this project, we will be focusing our analysis on the flights, airports, and weather datasets found in the [nycflights13](https://nycflights13.tidyverse.org/) tidyverse package.\
 
-Flights: all flights that departed from NYC in 2013. Size: 336,776 x 19
+**Flights**: all flights that departed from NYC in 2013. Size: 336,776 x 19
 
-Airports: airport names and locations. Size: 1,458 x 8
+**Airports**: airport names and locations. Size: 1,458 x 8
 
-Weather: hourly meteorological data for each airport. Size: 26,115 x 15
+**Weather**: hourly meteorological data for each airport. Size: 26,115 x 15
 
 \
 Some of the variables important to our research are: 
@@ -76,15 +78,61 @@ Under this section, we will explore the data with some visualizations:
 
 1.   The first graph shows us the distribution of flights departing from each airport across the 12 months. We can see that EWR has the highest volume of departing flights.
 
-`insert the codes here, visualization #1`
+```{r}
+three_airports <- flights %>%
+  filter(origin %in% c("JFK", "LGA", "EWR"))
+
+# summary
+monthly_summary <- three_airports %>%
+  group_by(origin, month) %>%
+  summarise(
+    flight_count = n(),
+    delay_count = sum(dep_delay >= 15, na.rm = TRUE)
+  )%>%
+  mutate(month = factor(month, levels = 1:12, labels = month.name))
+
+# flight counts
+ggplot(monthly_summary, aes(x = month, y = flight_count, group = 1)) +
+  geom_line(color = "lightskyblue") +
+  geom_point(color = "tan1") +
+  facet_wrap(~origin) +
+  labs(title = "Total Flights by Airport",
+       x = "Month", y = "Number of Flights") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
 
 2.   This graph gives us the distribution of the total amount of delayed flights for each airport. Airports with a smaller amount of departing flights will also have a proportionally lower amount of delayed flights.
 
-`insert the codes here, visualization #2`
+```{r}
+ggplot(monthly_summary, aes(x = month, y = delay_count, group = 1)) + 
+  geom_line(color = "lightskyblue") + 
+  geom_point(color = "tan1") + 
+  facet_wrap(~origin) + 
+  labs(title = "Monthly Flight Delays (>=15 min) by Airport", 
+       x = "Month", 
+       y = "Number of Delayed Flights") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
 
 3.  This graph compares the total number of flights departing from each airport and total number of delayed flights. Delayed numbers average out to roughly below one fourth of the total number of departing flights from each airport. 
 
-`insert the codes here, visualization #3`
+```{r}
+
+library(tidyr)
+monthly_long <- monthly_summary %>%
+  pivot_longer(
+    cols = c(flight_count, delay_count),
+    names_to = "type",
+    values_to = "count"
+  )
+ggplot(monthly_long, aes(x = month, y = count, color = type, group = type)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~origin) +
+  labs(title = "Monthly Flight Counts and Delay Counts by Airport",
+       x = "Month", y = "Count") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
 
 # **Methodology**
 
