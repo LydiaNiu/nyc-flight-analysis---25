@@ -71,5 +71,4 @@ ggplot(daily_stats, aes(x = flight_volume, y = avg_delay, color = origin)) +
   scale_color_manual(values = c("EWR" = "red", "JFK" = "blue", "LGA" = "black")) +
   labs(title = "Plot4: Flight Volume vs Average Delay by Season",
        x = "Daily Flight Volume", y = "Daily Average Delay (minutes)") +
-  theme_minimal() + 
-  geom_jitter(width = 5, height = 2, alpha = 0.4, size = 2)
+  theme_minimal()
