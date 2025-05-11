@@ -26,6 +26,7 @@ planes <- nycflights13::planes
 flight <- nycflights13::flights
 flight
 airlines
+airports
 
 planes
 
