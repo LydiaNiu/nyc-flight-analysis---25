@@ -1,6 +1,7 @@
 library(ggridges)
 library(dplyr)
 library(ggplot2)
+library(readr)
 
 # Question: Are there significant differences in average 
 # delays/volume across the three airports and seasons?
@@ -72,3 +73,21 @@ ggplot(daily_stats, aes(x = flight_volume, y = avg_delay, color = origin)) +
   labs(title = "Plot4: Flight Volume vs Average Delay by Season",
        x = "Daily Flight Volume", y = "Daily Average Delay (minutes)") +
   theme_minimal()
+
+
+# 4. Scatter plot for flight volume/delayed time by season and airport.
+# newest version: color-season, shape-airport
+ggplot(daily_stats, aes(x = flight_volume, y = avg_delay, color = season, shape = origin)) +
+  geom_point(size = 3, alpha = 0.8, stroke = 1.5) + 
+  scale_shape_manual(values = c("EWR" = 16, "JFK" = 17, "LGA" = 15)) +  # Shapes for airports
+  scale_color_manual(values = c("Fall" = "#E41A1C", "Spring" = "royalblue", "Summer" = "darkgreen", "Winter" = "yellow")) +  # Colors for seasons
+  labs(title = "Plot5: Flight Volume vs Average Delay by Season and Airport",
+       x = "Daily Flight Volume",
+       y = "Daily Average Delay (minutes)",
+       color = "Season",
+       shape = "Airport") +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    legend.box = "vertical"
+  )
