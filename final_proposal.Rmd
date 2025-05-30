@@ -10,7 +10,6 @@ date: "2025-04-28"
 library(nycflights13)
 library(ggplot2)
 library(dplyr)
-library(nycflights13)
 ```
 
 # **Introduction**
