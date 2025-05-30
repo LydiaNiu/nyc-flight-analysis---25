@@ -39,3 +39,4 @@ table(flights_clean$origin, flights_clean$season)
 # Step 6: Save the cleaned data as an .rds file
 write_rds(flights_clean, "flights_clean.rds")
 # It’s compact, preserves R-specific data types (e.g., tibbles), and is fast to read/write. It’s ideal if you’re only working in R.
+

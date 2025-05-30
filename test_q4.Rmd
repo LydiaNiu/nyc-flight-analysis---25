@@ -1,0 +1,26 @@
+---
+title: "test_q4"
+output: html_document
+date: "2025-05-30"
+---
+
+```{r, collapse=TRUE}
+library(ggridges)
+library(dplyr)
+library(ggplot2)
+library(readr)
+```
+
+Question4: Are there significant differences in average delays/volume across the three airports and seasons?
+
+-   **Hypothesis for Average Delays**:
+
+    -   Null (H0): There are no significant differences in mean average delays across airports, seasons, or their interaction.
+
+    -   Alternative (Ha1): There are significant differences in mean average delays for at least one airport, season, or their interaction.
+
+-   **Hypothesis for Flight Volume**:
+
+    -   Null (H0): There are no significant differences in flight volume across airports, seasons, or their interaction.
+
+    -   Alternative (Ha2): There are significant differences in flight volume for at least one airport, season, or their interaction.
