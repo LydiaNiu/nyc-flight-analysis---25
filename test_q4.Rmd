@@ -9,18 +9,118 @@ library(ggridges)
 library(dplyr)
 library(ggplot2)
 library(readr)
+library(car)
 ```
 
 Question4: Are there significant differences in average delays/volume across the three airports and seasons?
 
 -   **Hypothesis for Average Delays**:
 
-    -   Null (H0): There are no significant differences in mean average delays across airports, seasons, or their interaction.
+    -   Null (H01): There are no significant differences in mean average delays across airports and seasons.
 
-    -   Alternative (Ha1): There are significant differences in mean average delays for at least one airport, season, or their interaction.
+    -   Alternative (Ha1): There is a significant difference in mean average delays for at least one airport or season.
 
 -   **Hypothesis for Flight Volume**:
 
-    -   Null (H0): There are no significant differences in flight volume across airports, seasons, or their interaction.
+    -   Null (H02): There are no significant differences in flight volume across airports and seasons.
 
-    -   Alternative (Ha2): There are significant differences in flight volume for at least one airport, season, or their interaction.
+    -   Alternative (Ha2): There is a significant difference in flight volume for at least one airport or season.
+
+```{r}
+flights_clean <- read_rds("flights_clean.rds")
+
+summary_stats <- flights_clean |>
+  group_by(origin, season) |>
+  summarise(
+    avg_delay = mean(avg_delay, na.rm = TRUE),  # Mean delay per group
+    flight_volume = n(),  # Number of flights (volume)
+    .groups = "drop") # Median delay for robustness
+flights_clean
+summary_stats
+```
+
+### Assumptions: 
+
+Before we proceed to the ANOVA tests, we need to check three assumptions of ANOVA: **normality, constant variance, and indepedence.**
+
+1.  Normality using Shapiro-Wilk test and QQ plot.
+
+Through Shapiro-Wilk test, the delay model rejected the hypothesis, which the data is normally distributed, while the flight volume model failed to reject. We proceed to visualize the normality of delay model using qq plot, and still able to see some deviations at the middle part.
+
+Since the sample size is big (\>30), ANOVA is robust to violations of normality. Moreover, we can still assume the data is normally distributed using Central Limit Theorem because the sample size is greater than 30.
+
+```{r}
+# Two-way ANOVA models
+model_delay <- aov(avg_delay ~ origin + season, data = flights_clean)
+model_volume <- aov(flight_volume ~ origin + season, data = summary_stats)  # volume by group
+
+# # Shapiro-Wilk test on residuals, all failed: all 'x' values are identical
+shapiro.test(residuals(model_delay)) # p-val 0.247 < 0.05, reject, it's not normal, proceed to qq plot
+shapiro.test(residuals(model_volume)) # p-val 0.5926 > 0.05, fail to reject, it's normal
+
+# QQ plot, there are some deviations at the middle part, but follow CLT, the model is normalized
+qqnorm(model_delay$residuals, main = "Normal Q-Q Plot")
+qqline(model_delay$residuals, col = "red")
+```
+
+2.  Constant Variance using Levene's test.
+
+We should not use the summary stats to proceed the Levene's test because the data is alreayd aggregated, which it contains the average flight number and delayed time. Thus, we should use the raw dataset from the flights_clean data set.
+
+The p value is extremely smaller than 0.05, which means it rejects the hypothesis of the variances are constant.
+
+```{r}
+leveneTest(avg_delay ~ interaction(origin, season), data = flights_clean) # p value 2.2e-16 < 0.05, rejected
+```
+
+3.  Independence using Durbin-Watson test
+
+Both models satisfied the independence assumptions, which the p values are both greater than 0.05.
+
+```{r}
+durbinWatsonTest(model_delay) # p-val 0.442 > 0.05, fail to reject
+durbinWatsonTest(model_volume)  # p-val 0.536 > 0.05
+```
+
+Conclusion about 3 assumptions for ANOVA test: The two models satisfied the assumptions of normality and constant variance, however, according to the Levene's test, the data set (flights_clean) rejected the hypothesis means the variances are unequal. Thus, we need to use the Welch's ANOVA test.
+
+### Welch's ANOVA test
+
+```{r}
+oneway.test(avg_delay ~ interaction(origin, season), data = flights_clean)
+oneway.test(flight_volume ~ interaction(origin, season), data = summary_stats)
+```
+```{r}
+# Create a grouping variable combining origin and season
+flights_clean$group <- interaction(flights_clean$origin, flights_clean$season)
+
+# Kruskal-Wallis test for avg_delay
+kruskal_delay <- kruskal.test(avg_delay ~ group, data = flights_clean)
+kruskal_delay
+
+# Kruskal-Wallis test for flight volume
+kruskal_volume <- kruskal.test(flight_volume ~ group, data = summary_stats)
+kruskal_volume
+```
+```{r}
+# average delays by airport
+kruskal_delay_origin <- kruskal.test(avg_delay ~ origin, data = flights_clean)
+print("Kruskal-Wallis Test for Average Delays by Airport:")
+print(kruskal_delay_origin)
+
+# average delays by season
+kruskal_delay_season <- kruskal.test(avg_delay ~ season, data = flights_clean)
+print("Kruskal-Wallis Test for Average Delays by Season:")
+print(kruskal_delay_season)
+
+# flight volume by airport
+kruskal_volume_origin <- kruskal.test(flight_volume ~ origin, data = summary_stats)
+print("Kruskal-Wallis Test for Flight Volume by Airport:")
+print(kruskal_volume_origin)
+
+# flight volume by season
+kruskal_volume_season <- kruskal.test(flight_volume ~ season, data = summary_stats)
+print("Kruskal-Wallis Test for Flight Volume by Season:")
+print(kruskal_volume_season)
+```
+

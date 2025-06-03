@@ -15,9 +15,9 @@ summary_stats <- flights_clean %>%
   summarise(
     avg_delay = mean(avg_delay, na.rm = TRUE),  # Mean delay per group
     flight_volume = n(),  # Number of flights (volume)
-    median_delay = median(avg_delay, na.rm = TRUE)  # Median delay for robustness
-  ) %>%
-  ungroup()
+    median_delay = median(avg_delay, na.rm = TRUE),
+    .groups = "drop"# Median delay for robustness
+  )
 
 # Inspect the summary
 # print(summary_stats)
