@@ -1,0 +1,343 @@
+---
+title: "Group 14 Ice Cream - STAT 167 Final Project Report"
+output: pdf_document
+date: "2025-06-05"
+author: Lydia Niu, Alexis Castaneda, Aparna Petluri, Gracelynne Mohan, Jenny Zhang, Zoe Shum
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE, message=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(nycflights13)
+library(readr)
+```
+
+## Introduction
+
+Handling the heavy air traffic above New York, the John F. Kennedy International Airport (JFK), LaGuardia Airport (LGA), and Newark Liberty International Airport (EWR) manage immense flight operations throughout the year. Given a dataset regarding the dynamic flight patterns between these three airports, we hope to explore the various factors that may affect flight delays and flight volume - amount of flights. 
+
+The overall question we want to answer is: “What factors influence flight volume and does this affect delay patterns across New York City's major airports (JFK, LGA, and EWR)?” We hypothesize that weather conditions, such as temperature or wind speed, play a significant role in the occurrence of delays among the three airports. By analyzing the [nycflights13](https://nycflights13.tidyverse.org/) dataset, we aim to provide valuable insight to travelers, as well as airline and airport administrators, as to flight frequency and delays in the New York metropolitan area. 
+
+## Coherent Questions
+
+To help answer our main question, we aim to answer the following: 
+
+1.  Which months and seasons experience the highest flight volumes at each airport?
+
+2.  How do average delays vary by month and season?
+
+3.  Are delays more frequent/severe during specific weather conditions?
+
+4.  Are there significant differences in average delays/ flight volume across the 3 airports and across different seasons?
+
+5.  What relationship, if any, exists between busy days (high flight volume), weather conditions (temperature and wind speed) and flight delays?
+
+6.  Which airport is most affected by flight delays due to weather conditions among JFK, LGA, and EWR?
+
+## Data Description 
+
+For this project, we will be focusing our analysis on the flights, airports, and weather datasets found in the [nycflights13](https://nycflights13.tidyverse.org/) tidyverse package.
+
+Flights: all flights that departed from NYC in 2013. Size: 336,776 x 19
+
+Weather: hourly meteorological data for each airport. Size: 26,115 x 15
+
+As part of our data preprocessing, we removed all canceled flights and filtered out any entries with missing values related to weather variables. We also excluded data from December 31, which was missing wind speed and temperature information. After cleaning the data, we created new data frames containing calculated statistics to support a more structured analysis. These steps allowed us to explore the correlations between environmental factors and operational efficiency at New York City’s airports.
+
+```{r, include=FALSE}
+# q1 data
+
+```
+
+```{r, include=FALSE}
+# q2 data
+
+```
+
+```{r, include=FALSE}
+# q2 data
+
+```
+
+```{r, include=FALSE}
+# q3 data
+
+```
+
+```{r, include=FALSE}
+# q4 data
+
+```
+
+```{r, include=FALSE}
+# q5 data
+```
+
+
+## Visualization
+
+Question 1: Which months and seasons experience the highest flight volumes at each airport?
+
+Question 2: How do average delays vary by month and season?
+
+Question 3: Are delays more frequent/severe during specific weather conditions?
+
+```{r zoe1, echo=FALSE}
+flights_cleaned <- flights %>%
+  filter(origin %in% c("EWR", "JFK", "LGA")) %>%
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+
+flights_weather <- flights_cleaned %>%
+  left_join(weather, by = c("origin", "year", "month", "day", "hour")) %>%
+  mutate(delay_status = ifelse(dep_delay > 15, "Delayed", "On-Time")) %>%
+  filter(!is.na(precip), !is.na(wind_speed), !is.na(visib), !is.na(temp))
+```
+
+```{r zoe2, echo=FALSE}
+# seasonal_summary <- flights_cleaned %>%
+#   mutate(season = case_when(
+#     month %in% c(12, 1, 2) ~ "Winter",
+#     month %in% c(3, 4, 5) ~ "Spring",
+#     month %in% c(6, 7, 8) ~ "Summer",
+#     month %in% c(9, 10, 11) ~ "Fall"
+#   )) %>%
+#   group_by(origin, season) %>%
+#   summarise(
+#     flights_count = n(),
+#     delay_count = sum(dep_delay >= 15),
+#     avg_delay = mean(dep_delay),
+#     .groups = "drop"
+#   )
+# seasonal_summary
+# 
+# ggplot(seasonal_summary, aes(x = season, y = origin, fill = avg_delay)) +
+#   geom_tile() +
+#   labs(title = "Average Departure Delay by Season and Airport",
+#        x = "Season", y = "Airport", fill = "Avg Dep Delay (min)")
+```
+
+```{r zoe3, fig.width = 10, fig.height = 6, echo=FALSE}
+# # Summarize average delay by origin and temperature category
+# flights_temp <- flights_weather %>%
+#   mutate(temp_cat = factor(case_when(
+#     temp < 32 ~ "Freezing",
+#     temp < 60 ~ "Cold",
+#     temp < 80 ~ "Mild",
+#     TRUE ~ "Hot"
+#   ), levels = c("Freezing", "Cold", "Mild", "Hot")))
+# 
+# heatmap_data <- flights_temp %>%
+#   group_by(origin, temp_cat) %>%
+#   summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop")
+# 
+# # Create the heatmap
+# hm1 <- ggplot(heatmap_data, aes(x = origin, y = temp_cat, fill = avg_delay)) +
+#   geom_tile(color = "white") +
+#   scale_fill_gradient(low = "lightblue", high = "darkred", name = "Avg Delay (min)") +
+#   labs(title = "Average Delay by Origin and Temperature",
+#        x = "Origin Airport", y = "Temperature Category") +
+#   theme_minimal()
+# 
+# # Summarize average delay by origin and wind speed category
+# flights_wind_speed <- flights_weather %>%
+#   mutate(wind_cat = factor(case_when(
+#     wind_speed < 5 ~ "Calm",
+#     wind_speed < 10 ~ "Breezy",
+#     wind_speed < 20 ~ "Windy",
+#     TRUE ~ "Very Windy"
+#   ), levels = c("Calm", "Breezy", "Windy", "Very Windy")))
+# 
+# heatmap_data_wind <- flights_wind_speed %>%
+#   group_by(origin, wind_cat) %>%
+#   summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop")
+# 
+# # Create the heatmap
+# hm2 <- ggplot(heatmap_data_wind, aes(x = origin, y = wind_cat, fill = avg_delay)) +
+#   geom_tile(color = "white") +
+#   scale_fill_gradient(low = "lightblue", high = "darkred", name = "Avg Delay (min)") +
+#   labs(title = "Average Delay by Origin and Wind Speed",
+#        x = "Origin Airport", y = "Wind Speed Category") +
+#   theme_minimal()
+# 
+# # Summarize average delay by origin and visibility category
+# flights_visib <- flights_weather %>%
+#   mutate(visib_cat = case_when(
+#     visib < 5 ~ "Low",
+#     TRUE ~ "High"
+#   ))
+# 
+# heatmap_data_visib <- flights_visib %>%
+#   group_by(origin, visib_cat) %>%
+#   summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop")
+# 
+# # Create the heatmap
+# hm3 <- ggplot(heatmap_data_visib, aes(x = origin, y = visib_cat, fill = avg_delay)) +
+#   geom_tile(color = "white") +
+#   scale_fill_gradient(low = "lightblue", high = "darkred", name = "Avg Delay (min)") +
+#   labs(title = "Average Delay by Origin and Visibility",
+#        x = "Origin Airport", y = "Visibility Category") +
+#   theme_minimal()
+# 
+# # Summarize average delay by origin and precipitation category
+# flights_precip <- flights_weather %>%
+#   mutate(precip_cat = ifelse(precip > 0, "Precipitation", "No Precipitation"))
+# 
+# heatmap_data_precip <- flights_precip %>%
+#   group_by(origin, precip_cat) %>%
+#   summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop")
+# 
+# # Create the heatmap
+# hm4 <- ggplot(heatmap_data_precip, aes(x = origin, y = precip_cat, fill = avg_delay)) +
+#   geom_tile(color = "white") +
+#   scale_fill_gradient(low = "lightblue", high = "darkred", name = "Avg Delay (min)") +
+#   labs(title = "Average Delay by Origin and Precipitation",
+#        x = "Origin Airport", y = "Precipitation") +
+#   theme_minimal()
+# 
+# # Arrange in a grid (2 rows, 2 columns; 1 blank)
+# grid.arrange(hm1, hm2, hm3, hm4, ncol = 2)
+```
+
+Question 4: Are there significant differences in average delays/ flight volume across the 3 airports and across different seasons?
+
+Question 5: What relationship, if any, exists between busy days (high flight volume), weather conditions (temperature and wind speed) and flight delays?
+```{r, alexis and aparna, echo=FALSE}
+flights_cleaned <- flights |>
+  filter(origin %in% c("EWR", "JFK", "LGA")) |>
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+
+# Saves flights daily volume
+flights_volume <- flights_cleaned |>
+  group_by(month, day) |>
+  summarise(flight_volume = n(),
+            .groups = "drop")
+
+# Saves flights daily weather
+flights_weather <- weather |>
+  filter(!is.na(temp), !is.na(wind_speed)) |>
+  group_by(month, day) |>
+  summarise(avg_temp = mean(temp),
+            avg_wind_speed = mean(wind_speed),
+            .groups = "drop")
+
+# Combines them into the original flights_cleaned
+flights_combined <- left_join(flights_cleaned, flights_volume, by = join_by(month, day))
+
+flights_combined <- left_join(flights_combined, flights_weather, by = join_by(month, day))
+
+# Weather doesn't have Dec 31 recorded
+flights_combined_filtered <- flights_combined |> filter(!(month == 12 & day == 31),
+                                                        !is.na(avg_wind_speed), !is.na(avg_temp),
+                                                        !is.na(dep_delay), !is.na(flight_volume))
+```
+```{r, alexis and aparna, echo=FALSE}
+Flight_Vol_Density <- ggplot(data = flights_combined_filtered,
+       mapping = aes(x = flight_volume)) +
+  geom_density(fill = "darkgreen") + 
+  labs(title = "Flight Volume Distribution", x = "Flight Volume", y = "Density")
+
+Avg_Temp_Density <- ggplot(data = flights_combined_filtered,
+       mapping = aes(x = avg_temp)) +
+  geom_density(fill = "darkgreen") +
+  labs(title = "Average Temperature Distribution", x = "Average Temperature", y = "Density")
+
+Avg_Windspeed_Density<- ggplot(data = flights_combined_filtered,
+       mapping = aes(x = avg_wind_speed)) +
+  geom_density(fill = "darkgreen") +
+  labs(title = "Average Wind Speed Distribution", x = "Average Wind Speed", y = "Density")
+
+Dep_Delay_Density <- ggplot(data = flights_combined_filtered,
+       mapping = aes(x = dep_delay)) +
+  geom_density(fill = "darkgreen") +
+  labs(title = "Departure Delay Distribution", x = "Departure Delay", y = "Density")
+
+grid.arrange(Flight_Vol_Density, Avg_Temp_Density, Avg_Windspeed_Density, Dep_Delay_Density, nrow = 2)
+```
+```{r, alexis and aparna, echo = FALSE}
+ggplot(data = flights_combined_filtered, 
+       mapping = aes(x = flight_volume, y = dep_delay)) +
+  geom_point() +
+  geom_smooth(se = F, color = "darkblue") +
+  labs(title = "Flight Volume vs. Departure Delay", 
+       x = "Flight Volume", y = "Departure Delay (Min)")
+
+ggplot(data = flights_combined_filtered,
+       mapping = aes(x = avg_temp, y = dep_delay)) +
+  geom_point() +
+  geom_smooth(se = F, color = "darkblue") + 
+  labs(title = "Average Temperature vs. Departure Delay", x = "Average Temperature (Day)", y = "Departure Delay (Min)")
+
+ggplot(data = flights_combined_filtered, 
+       mapping = aes(x = avg_wind_speed, y = dep_delay)) +
+  geom_point() +
+  geom_smooth(se = F, color = "darkblue") + 
+  labs(title = "Average Wind Speed vs. Departure Delay", x = "Average Wind Speed (Day)", y = "Departure Delay (Min")
+```
+
+
+Question 6: Which airport is most affected by flight delays due to weather conditions among JFK, LGA, and EWR?
+```{r, include=FALSE}
+# q6 data
+nyc_flights <- flights %>%
+  filter(origin %in% c("EWR", "JFK", "LGA")) %>%
+  filter(!is.na(dep_delay), !is.na(arr_delay)) # remove NA values 
+
+nyc_flights
+```
+
+```{r}
+nyc_flights <- flights %>%
+  filter(origin %in% c("EWR", "JFK", "LGA")) %>%
+  filter(!is.na(dep_delay), !is.na(arr_delay)) # remove NA values 
+
+nyc_flights
+```
+
+```{r}
+flights_weather <- nyc_flights %>%
+  filter(origin %in% c("JFK", "LGA", "EWR")) %>%
+  left_join(weather, by = c("origin", "time_hour"))
+
+flights_weather_filtered <- flights_weather %>%
+  select(origin, arr_delay, dep_delay, precip, wind_speed, visib)
+
+flights_weather_filtered
+```
+
+```{r}
+flights_weather_filtered <- flights_weather_filtered %>%
+  filter(!is.na(precip), !is.na(wind_speed), !is.na(visib)) %>%
+  mutate(
+    bad_weather = ifelse(precip > 0.5 | wind_speed > 15 | visiSb < 2, "Bad", "Good")
+  ) 
+
+delay_summary <- flights_weather_filtered %>%
+  group_by(origin, bad_weather) %>%
+  summarise(
+    avg_arr_delay = mean(arr_delay, na.rm = TRUE),
+    avg_dep_delay = mean(dep_delay, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(!is.na(bad_weather))
+
+delay_summary
+
+ggplot(delay_summary, aes(x = origin, y = avg_dep_delay, fill = bad_weather)) +
+  geom_col(position = "dodge") +
+  labs(title = "Average Departure Delay by Airport and Weather",
+       x = "Airport", y = "Avg Departure Delay (min)", fill = "Weather") +
+  theme_minimal()
+
+ggplot(delay_summary, aes(x = origin, y = avg_arr_delay, fill = bad_weather)) +
+  geom_col(position = "dodge") +
+  labs(title = "Average Arrival Delay by Airport and Weather",
+       x = "Airport", y = "Avg Arrival Delay (min)", fill = "Weather") +
+  theme_minimal()
+
+```
+
