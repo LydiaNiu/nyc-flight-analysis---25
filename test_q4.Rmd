@@ -99,7 +99,7 @@ kruskal_delay <- kruskal.test(avg_delay ~ group, data = flights_clean)
 kruskal_delay
 
 # Kruskal-Wallis test for flight volume
-kruskal_volume <- kruskal.test(flight_volume ~ group, data = summary_stats)
+kruskal_volume <- kruskal.test(flight_volume ~ interaction(summary_stats$origin, summary_stats$season), data = summary_stats)
 kruskal_volume
 ```
 ```{r}
