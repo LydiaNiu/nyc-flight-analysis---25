@@ -15,6 +15,7 @@ library(dplyr)
 library(ggplot2)
 library(nycflights13)
 library(readr)
+library(gridExtra)
 ```
 
 ## Introduction
@@ -49,37 +50,8 @@ Weather: hourly meteorological data for each airport. Size: 26,115 x 15
 
 As part of our data preprocessing, we removed all canceled flights and filtered out any entries with missing values related to weather variables. We also excluded data from December 31, which was missing wind speed and temperature information. After cleaning the data, we created new data frames containing calculated statistics to support a more structured analysis. These steps allowed us to explore the correlations between environmental factors and operational efficiency at New York City’s airports.
 
-```{r, include=FALSE}
-# q1 data
 
-```
-
-```{r, include=FALSE}
-# q2 data
-
-```
-
-```{r, include=FALSE}
-# q2 data
-
-```
-
-```{r, include=FALSE}
-# q3 data
-
-```
-
-```{r, include=FALSE}
-# q4 data
-
-```
-
-```{r, include=FALSE}
-# q5 data
-```
-
-
-## Visualization
+## Data Exploration and Visualization
 
 Question 1: Which months and seasons experience the highest flight volumes at each airport?
 
@@ -99,114 +71,115 @@ flights_weather <- flights_cleaned %>%
 ```
 
 ```{r zoe2, echo=FALSE}
-# seasonal_summary <- flights_cleaned %>%
-#   mutate(season = case_when(
-#     month %in% c(12, 1, 2) ~ "Winter",
-#     month %in% c(3, 4, 5) ~ "Spring",
-#     month %in% c(6, 7, 8) ~ "Summer",
-#     month %in% c(9, 10, 11) ~ "Fall"
-#   )) %>%
-#   group_by(origin, season) %>%
-#   summarise(
-#     flights_count = n(),
-#     delay_count = sum(dep_delay >= 15),
-#     avg_delay = mean(dep_delay),
-#     .groups = "drop"
-#   )
-# seasonal_summary
-# 
-# ggplot(seasonal_summary, aes(x = season, y = origin, fill = avg_delay)) +
-#   geom_tile() +
-#   labs(title = "Average Departure Delay by Season and Airport",
-#        x = "Season", y = "Airport", fill = "Avg Dep Delay (min)")
+seasonal_summary <- flights_cleaned %>%
+  mutate(season = case_when(
+    month %in% c(12, 1, 2) ~ "Winter",
+    month %in% c(3, 4, 5) ~ "Spring",
+    month %in% c(6, 7, 8) ~ "Summer",
+    month %in% c(9, 10, 11) ~ "Fall"
+  )) %>%
+  group_by(origin, season) %>%
+  summarise(
+    flights_count = n(),
+    delay_count = sum(dep_delay >= 15),
+    avg_delay = mean(dep_delay),
+    .groups = "drop"
+  )
+seasonal_summary
+
+ggplot(seasonal_summary, aes(x = season, y = origin, fill = avg_delay)) +
+  geom_tile() +
+  labs(title = "Average Departure Delay by Season and Airport",
+       x = "Season", y = "Airport", fill = "Avg Dep Delay (min)")
 ```
 
 ```{r zoe3, fig.width = 10, fig.height = 6, echo=FALSE}
-# # Summarize average delay by origin and temperature category
-# flights_temp <- flights_weather %>%
-#   mutate(temp_cat = factor(case_when(
-#     temp < 32 ~ "Freezing",
-#     temp < 60 ~ "Cold",
-#     temp < 80 ~ "Mild",
-#     TRUE ~ "Hot"
-#   ), levels = c("Freezing", "Cold", "Mild", "Hot")))
-# 
-# heatmap_data <- flights_temp %>%
-#   group_by(origin, temp_cat) %>%
-#   summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop")
-# 
-# # Create the heatmap
-# hm1 <- ggplot(heatmap_data, aes(x = origin, y = temp_cat, fill = avg_delay)) +
-#   geom_tile(color = "white") +
-#   scale_fill_gradient(low = "lightblue", high = "darkred", name = "Avg Delay (min)") +
-#   labs(title = "Average Delay by Origin and Temperature",
-#        x = "Origin Airport", y = "Temperature Category") +
-#   theme_minimal()
-# 
-# # Summarize average delay by origin and wind speed category
-# flights_wind_speed <- flights_weather %>%
-#   mutate(wind_cat = factor(case_when(
-#     wind_speed < 5 ~ "Calm",
-#     wind_speed < 10 ~ "Breezy",
-#     wind_speed < 20 ~ "Windy",
-#     TRUE ~ "Very Windy"
-#   ), levels = c("Calm", "Breezy", "Windy", "Very Windy")))
-# 
-# heatmap_data_wind <- flights_wind_speed %>%
-#   group_by(origin, wind_cat) %>%
-#   summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop")
-# 
-# # Create the heatmap
-# hm2 <- ggplot(heatmap_data_wind, aes(x = origin, y = wind_cat, fill = avg_delay)) +
-#   geom_tile(color = "white") +
-#   scale_fill_gradient(low = "lightblue", high = "darkred", name = "Avg Delay (min)") +
-#   labs(title = "Average Delay by Origin and Wind Speed",
-#        x = "Origin Airport", y = "Wind Speed Category") +
-#   theme_minimal()
-# 
-# # Summarize average delay by origin and visibility category
-# flights_visib <- flights_weather %>%
-#   mutate(visib_cat = case_when(
-#     visib < 5 ~ "Low",
-#     TRUE ~ "High"
-#   ))
-# 
-# heatmap_data_visib <- flights_visib %>%
-#   group_by(origin, visib_cat) %>%
-#   summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop")
-# 
-# # Create the heatmap
-# hm3 <- ggplot(heatmap_data_visib, aes(x = origin, y = visib_cat, fill = avg_delay)) +
-#   geom_tile(color = "white") +
-#   scale_fill_gradient(low = "lightblue", high = "darkred", name = "Avg Delay (min)") +
-#   labs(title = "Average Delay by Origin and Visibility",
-#        x = "Origin Airport", y = "Visibility Category") +
-#   theme_minimal()
-# 
-# # Summarize average delay by origin and precipitation category
-# flights_precip <- flights_weather %>%
-#   mutate(precip_cat = ifelse(precip > 0, "Precipitation", "No Precipitation"))
-# 
-# heatmap_data_precip <- flights_precip %>%
-#   group_by(origin, precip_cat) %>%
-#   summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop")
-# 
-# # Create the heatmap
-# hm4 <- ggplot(heatmap_data_precip, aes(x = origin, y = precip_cat, fill = avg_delay)) +
-#   geom_tile(color = "white") +
-#   scale_fill_gradient(low = "lightblue", high = "darkred", name = "Avg Delay (min)") +
-#   labs(title = "Average Delay by Origin and Precipitation",
-#        x = "Origin Airport", y = "Precipitation") +
-#   theme_minimal()
-# 
-# # Arrange in a grid (2 rows, 2 columns; 1 blank)
-# grid.arrange(hm1, hm2, hm3, hm4, ncol = 2)
+# Summarize average delay by origin and temperature category
+flights_temp <- flights_weather %>%
+  mutate(temp_cat = factor(case_when(
+    temp < 32 ~ "Freezing",
+    temp < 60 ~ "Cold",
+    temp < 80 ~ "Mild",
+    TRUE ~ "Hot"
+  ), levels = c("Freezing", "Cold", "Mild", "Hot")))
+
+heatmap_data <- flights_temp %>%
+  group_by(origin, temp_cat) %>%
+  summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop")
+
+# Create the heatmap
+hm1 <- ggplot(heatmap_data, aes(x = origin, y = temp_cat, fill = avg_delay)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkred", name = "Avg Delay (min)") +
+  labs(title = "Average Delay by Origin and Temperature",
+       x = "Origin Airport", y = "Temperature Category") +
+  theme_minimal()
+
+# Summarize average delay by origin and wind speed category
+flights_wind_speed <- flights_weather %>%
+  mutate(wind_cat = factor(case_when(
+    wind_speed < 5 ~ "Calm",
+    wind_speed < 10 ~ "Breezy",
+    wind_speed < 20 ~ "Windy",
+    TRUE ~ "Very Windy"
+  ), levels = c("Calm", "Breezy", "Windy", "Very Windy")))
+
+heatmap_data_wind <- flights_wind_speed %>%
+  group_by(origin, wind_cat) %>%
+  summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop")
+
+# Create the heatmap
+hm2 <- ggplot(heatmap_data_wind, aes(x = origin, y = wind_cat, fill = avg_delay)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkred", name = "Avg Delay (min)") +
+  labs(title = "Average Delay by Origin and Wind Speed",
+       x = "Origin Airport", y = "Wind Speed Category") +
+  theme_minimal()
+
+# Summarize average delay by origin and visibility category
+flights_visib <- flights_weather %>%
+  mutate(visib_cat = case_when(
+    visib < 5 ~ "Low",
+    TRUE ~ "High"
+  ))
+
+heatmap_data_visib <- flights_visib %>%
+  group_by(origin, visib_cat) %>%
+  summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop")
+
+# Create the heatmap
+hm3 <- ggplot(heatmap_data_visib, aes(x = origin, y = visib_cat, fill = avg_delay)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkred", name = "Avg Delay (min)") +
+  labs(title = "Average Delay by Origin and Visibility",
+       x = "Origin Airport", y = "Visibility Category") +
+  theme_minimal()
+
+# Summarize average delay by origin and precipitation category
+flights_precip <- flights_weather %>%
+  mutate(precip_cat = ifelse(precip > 0, "Precipitation", "No Precipitation"))
+
+heatmap_data_precip <- flights_precip %>%
+  group_by(origin, precip_cat) %>%
+  summarise(avg_delay = mean(dep_delay, na.rm = TRUE), .groups = "drop")
+
+# Create the heatmap
+hm4 <- ggplot(heatmap_data_precip, aes(x = origin, y = precip_cat, fill = avg_delay)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkred", name = "Avg Delay (min)") +
+  labs(title = "Average Delay by Origin and Precipitation",
+       x = "Origin Airport", y = "Precipitation") +
+  theme_minimal()
+
+# Arrange in a grid (2 rows, 2 columns; 1 blank)
+grid.arrange(hm1, hm2, hm3, hm4, ncol = 2)
 ```
 
 Question 4: Are there significant differences in average delays/ flight volume across the 3 airports and across different seasons?
 
+
 Question 5: What relationship, if any, exists between busy days (high flight volume), weather conditions (temperature and wind speed) and flight delays?
-```{r, alexis and aparna, echo=FALSE}
+```{r alexis_aparna1, echo=FALSE}
 flights_cleaned <- flights |>
   filter(origin %in% c("EWR", "JFK", "LGA")) |>
   filter(!is.na(dep_delay), !is.na(arr_delay))
@@ -235,7 +208,8 @@ flights_combined_filtered <- flights_combined |> filter(!(month == 12 & day == 3
                                                         !is.na(avg_wind_speed), !is.na(avg_temp),
                                                         !is.na(dep_delay), !is.na(flight_volume))
 ```
-```{r, alexis and aparna, echo=FALSE}
+
+```{r alexis_aparna2, echo=FALSE}
 Flight_Vol_Density <- ggplot(data = flights_combined_filtered,
        mapping = aes(x = flight_volume)) +
   geom_density(fill = "darkgreen") + 
@@ -258,7 +232,7 @@ Dep_Delay_Density <- ggplot(data = flights_combined_filtered,
 
 grid.arrange(Flight_Vol_Density, Avg_Temp_Density, Avg_Windspeed_Density, Dep_Delay_Density, nrow = 2)
 ```
-```{r, alexis and aparna, echo = FALSE}
+```{r alexis_aparna3, echo = FALSE}
 ggplot(data = flights_combined_filtered, 
        mapping = aes(x = flight_volume, y = dep_delay)) +
   geom_point() +
@@ -281,22 +255,14 @@ ggplot(data = flights_combined_filtered,
 
 
 Question 6: Which airport is most affected by flight delays due to weather conditions among JFK, LGA, and EWR?
-```{r, include=FALSE}
-# q6 data
+```{r, echo=FALSE}
 nyc_flights <- flights %>%
   filter(origin %in% c("EWR", "JFK", "LGA")) %>%
   filter(!is.na(dep_delay), !is.na(arr_delay)) # remove NA values 
 
-nyc_flights
+glimpse(nyc_flights)
 ```
 
-```{r}
-nyc_flights <- flights %>%
-  filter(origin %in% c("EWR", "JFK", "LGA")) %>%
-  filter(!is.na(dep_delay), !is.na(arr_delay)) # remove NA values 
-
-nyc_flights
-```
 
 ```{r}
 flights_weather <- nyc_flights %>%
@@ -306,14 +272,14 @@ flights_weather <- nyc_flights %>%
 flights_weather_filtered <- flights_weather %>%
   select(origin, arr_delay, dep_delay, precip, wind_speed, visib)
 
-flights_weather_filtered
+glimpse(flights_weather_filtered)
 ```
 
 ```{r}
 flights_weather_filtered <- flights_weather_filtered %>%
   filter(!is.na(precip), !is.na(wind_speed), !is.na(visib)) %>%
   mutate(
-    bad_weather = ifelse(precip > 0.5 | wind_speed > 15 | visiSb < 2, "Bad", "Good")
+    bad_weather = ifelse(precip > 0.5 | wind_speed > 15 | visib < 2, "Bad", "Good")
   ) 
 
 delay_summary <- flights_weather_filtered %>%
