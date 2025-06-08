@@ -97,11 +97,48 @@ ggplot(seasonal_counts, aes(x = season, y = total_flights, fill = origin)) +
   theme_minimal()
 ```
 
-##### [needed] Analysis: 
+##### Analysis: 
+
+In 2 out of the 3 examined airports, spring and summer tended to have the highest flight volumes, though this difference may not be significant enough to warrant any concrete conclusions as in LGA this trend does not reflect.
+
+EWR had the highest average number of flights, while LGA had the lowest, though some of its season totals are comparable to that of JFK.
 
 #### Question 2: How do average delays vary by month and season?
 
-##### [needed] Analysis:
+```{r jenny, echo = FALSE}
+
+flights_clean <- flights %>%
+  filter(origin %in% c("EWR", "JFK", "LGA")) %>%
+  filter(!is.na(dep_delay), !is.na(arr_delay))
+
+flights_clean %>%
+  filter(dep_delay >= 0, dep_delay <= 150) %>%
+  mutate(delay_bin = cut(dep_delay, breaks = seq(0, 150, by = 10))) %>%
+  count(month, delay_bin) %>%
+  filter( !is.na(delay_bin)) %>%
+  ggplot(aes(x = delay_bin, y = factor(month), fill = n)) +
+  geom_tile(color = "white") +
+  scale_fill_gradientn(
+    colors = c("white","lightgoldenrod", "orange", "darkorange", "orangered", "firebrick"),
+    name = "Count"
+  ) + 
+  labs(
+    title = "Heatmap of Delay Frequency by Month and Delay",
+    x = "Delay Range (min)",
+    y = "Month"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+##### Analysis:
+
+Months with the highest amount of delays ranging 1-10 minutes can be identified as the months of July, August and December.
+
+As we move further down the heat map, we see that June, July, and December still maintain colors between “white” and “lightgoldenrod” all the way down to the 90-100 interval, showing how these months may also have longer delays.
+
+The fall months September, October, and November tend to have less of the longer delays seeing that the 90-100 end of their part of the graph is close to “white”.
 
 #### Question 3: Are delays more frequent/severe during specific weather conditions?
 
@@ -235,7 +272,6 @@ Initial visualizations indicated seasonal trends, with summer showing the highes
 
 #### Question 4: Are there significant differences in average delays/ flight volume across the 3 airports and across different seasons?
 
-
 ```{r lyd1, echo=FALSE}
 flights_clean <- read_rds("flights_clean.rds")
 # First sub dataset: Summarize average delays and flight volume by airport and season
@@ -249,7 +285,6 @@ summary_stats <- flights_clean %>%
   )
 ```
 
-
 ```{r lyd2, echo=FALSE, fig.width=10, fig.height=6}
 # 3. Bar plot of flight volume
 ggplot(summary_stats, aes(x = origin, y = flight_volume, fill = season)) +
@@ -261,35 +296,42 @@ ggplot(summary_stats, aes(x = origin, y = flight_volume, fill = season)) +
   theme_minimal()
 
 # second sub dataset: Summarize by airport, season, and day to get daily averages for scatter plot
-daily_stats <- flights_clean %>%
-  group_by(origin, season, month, day) %>%
-  summarise(
-    avg_delay = mean(avg_delay, na.rm = TRUE),
-    flight_volume = n(),
-    .groups = "drop"
-  ) %>%
-  ungroup()
+daily_stats <- flights_cleaned %>%
+mutate(season = case_when(
+  month %in% c(12, 1, 2) ~ "Winter",
+  month %in% c(3, 4, 5) ~ "Spring",
+  month %in% c(6, 7, 8) ~ "Summer",
+  month %in% c(9, 10, 11) ~ "Fall"
+)) %>%
+group_by(origin, season, day) %>%
+summarise(
+avg_delay = mean(dep_delay, na.rm = TRUE),
+flight_volume = n(),
+.groups = "drop"
+)
 
-# [needed] replace this scatter plot
-ggplot(daily_stats, aes(x = flight_volume, y = avg_delay, color = season, shape = origin)) +
-  geom_point(size = 3, alpha = 0.8, stroke = 1.5) + 
-  scale_shape_manual(values = c("EWR" = 16, "JFK" = 17, "LGA" = 15)) +  # Shapes for airports
-  scale_color_manual(values = c("Fall" = "#E41A1C", "Spring" = "royalblue", "Summer" = "darkgreen", "Winter" = "yellow")) +  # Colors for seasons
-  labs(title = "Plot5: Flight Volume vs Average Delay by Season and Airport",
-       x = "Daily Flight Volume",
-       y = "Daily Average Delay (minutes)",
-       color = "Season",
-       shape = "Airport") +
-  theme_minimal() +
-  theme(
-    legend.position = "right",
-    legend.box = "vertical"
-  )
+ggplot(daily_stats, aes(x = flight_volume, y = avg_delay, color = season)) +
+facet_grid(origin ~.) +
+geom_point(alpha = 0.6) +
+scale_color_manual(values = c("Fall" = "red", "Spring" = "gold", "Summer" = "darkgreen", "Winter" = "blue")) + # Colors for seasons
+labs(title = "Flight Volume vs. Average Delay by Season and Airport",
+x = "Daily Flight Volume",
+y = "Daily Average Delay (minutes)",
+color = "Season",
+shape = "Airport") +
+theme_minimal() +
+theme(
+legend.position = "right",
+legend.box = "vertical"
+)
 
 ```
 
+##### Analysis:
 
-##### [needed] Analysis:
+The "Flight Volume by Airport and Season" bar chart indicates that EWR consistently handles the highest number of flights across all seasons, with summer and spring showing the highest volumes (around 30,000 flights), followed by fall and winter. JFK and LGA exhibit lower and more balanced flight volumes, with JFK peaking in summer (around 25,000 flights) and LGA showing a similar trend with a slight edge in fall (around 25,000 flights). This suggests that EWR is the busiest airport overall, with seasonal variations more pronounced than at JFK or LGA.
+
+The "Flight Volume vs. Average Delay by Season and Airport" scatter plot further reveals that average delays vary across airports and seasons, though no clear linear relationship between flight volume and delay is evident. EWR shows a wide range of delays (up to 40 minutes) across all flight volumes, with winter and fall seasons exhibiting higher variability. JFK and LGA tend to have lower average delays (mostly under 20 minutes), with JFK showing more consistency and LGA experiencing occasional higher delays in spring and summer at lower flight volumes. These observations suggest significant differences in delay patterns, potentially influenced by airport-specific factors and seasonal weather conditions, though a deeper statistical analysis would be needed to confirm significance.
 
 #### Question 5: What relationship, if any, exists between busy days (high flight volume), weather conditions (temperature and wind speed) and flight delays?
 
@@ -348,24 +390,24 @@ grid.arrange(Flight_Vol_Density, Avg_Temp_Density, Avg_Windspeed_Density, Dep_De
 ```
 
 ```{r alexis_aparna3, echo = FALSE, fig.width=10, fig.height=6}
-# ggplot(data = flights_combined_filtered, 
-#        mapping = aes(x = flight_volume, y = dep_delay)) +
-#   geom_point() +
-#   geom_smooth(se = F, color = "darkblue") +
-#   labs(title = "Flight Volume vs. Departure Delay", 
-#        x = "Flight Volume", y = "Departure Delay (Min)")
-# 
-# ggplot(data = flights_combined_filtered,
-#        mapping = aes(x = avg_temp, y = dep_delay)) +
-#   geom_point() +
-#   geom_smooth(se = F, color = "darkblue") + 
-#   labs(title = "Average Temperature vs. Departure Delay", x = "Average Temperature (Day)", y = "Departure Delay (Min)")
-# 
-# ggplot(data = flights_combined_filtered, 
-#        mapping = aes(x = avg_wind_speed, y = dep_delay)) +
-#   geom_point() +
-#   geom_smooth(se = F, color = "darkblue") + 
-#   labs(title = "Average Wind Speed vs. Departure Delay", x = "Average Wind Speed (Day)", y = "Departure Delay (Min")
+ggplot(data = flights_combined_filtered,
+       mapping = aes(x = flight_volume, y = dep_delay)) +
+  geom_point() +
+  geom_smooth(se = F, color = "darkblue") +
+  labs(title = "Flight Volume vs. Departure Delay",
+       x = "Flight Volume", y = "Departure Delay (Min)")
+
+ggplot(data = flights_combined_filtered,
+       mapping = aes(x = avg_temp, y = dep_delay)) +
+  geom_point() +
+  geom_smooth(se = F, color = "darkblue") +
+  labs(title = "Average Temperature vs. Departure Delay", x = "Average Temperature (Day)", y = "Departure Delay (Min)")
+
+ggplot(data = flights_combined_filtered,
+       mapping = aes(x = avg_wind_speed, y = dep_delay)) +
+  geom_point() +
+  geom_smooth(se = F, color = "darkblue") +
+  labs(title = "Average Wind Speed vs. Departure Delay", x = "Average Wind Speed (Day)", y = "Departure Delay (Min")
 ```
 
 ##### Analysis:
@@ -427,7 +469,9 @@ ggplot(delay_summary, aes(x = origin, y = avg_arr_delay, fill = bad_weather)) +
 
 ```
 
-##### [needed]Analysis:
+##### Analysis:
+
+To analyze which of the three airports was most affected by flight delays due to weather conditions, we created two bar plots. In order to do so, we grouped the three weather conditions under one variable “Bad Weather”, which was defined as precipitation greater than 0.5 inches, wind speed exceeding 15 miles per hour, and visibility less than 2 miles. If the weather didn’t meet those conditions, it was considered “Good Weather”. Using this classification, we made two bar plots to compare the average departure and arrival delays at each airport. From the plots, we find that EWR experiences the highest level of delays overall compared to JFK and LGA, with an increase in delays in bad weather. 
 
 ## **Data Analysis**
 
@@ -484,7 +528,7 @@ Seeing that our p value is significant, we reject the null hypothesis. There is 
 A post-hoc test with Dunn’s test can then be conducted to give us months that have the greatest average flight delay difference in comparison to other months after successfully rejecting the null hypothesis from Kruskal’s.\
 
 ```{r jenny5, echo=FALSE}
-# [needed] flights_clean
+flights_clean <- flights %>% filter(origin %in% c("EWR", "JFK", "LGA")) %>% filter(!is.na(dep_delay), !is.na(arr_delay))
 # dunn's
 dunn_result <- dunnTest(dep_delay ~ factor(month), data = flights_clean, method = "bonferroni")
 
@@ -713,7 +757,7 @@ Initially, we considered using ANOVA, but ran into two issues: the raw dataset h
 
 Kruskal-Wallis Test does not require normality and equal variances and requires two assumptions:
 
-1.  Continuous Dependent vVriables: average delay and flight volume
+1.  Continuous Dependent Vriables: average delay and flight volume
 2.  Categorical Factors: origin and season.
 
 This test was appropriate for average delays, but could not be applied to flight volume since flight volume is an aggregated variable and Kruskal Wallis test required a sample size of 5 per group while summary table only has 1.
@@ -829,7 +873,9 @@ In conclusion, we fail to reject the null hypothesis for all three tests and can
 
 #### Question 6: Which airport is most affected by flight delays due to weather conditions among JFK, LGA, and EWR?
 
-##### [needed] Assumptions:
+##### Assumptions:
+
+Due to assumptions for an ANOVA being violated, we chose to use the Kruskal-Wallis Test instead. The test revealed that there were significant differences in both arrival and departure delays between the three airports that we looked at, as all the p-values are less 2.2e-16. In the same way, when grouped by weather conditions, the p-values being less than 2.2e-16 indicates significant difference. These results show us that airport location and weather conditions have an impact on the durations of flight delays.
 
 ##### Analysis:
 
@@ -848,7 +894,9 @@ flights_weather_filtered$group <- paste(flights_weather_filtered$origin, flights
 dunnTest(arr_delay ~ group, data = flights_weather_filtered, method = "bonferroni")
 ```
 
-##### [needed] Conclusion:
+##### Conclusion:
+To specifically pinpoint which airport was affected the most, we conducted a post-hoc Dunn’s Test to perform a pairwise comparison. Using this test, we found that JFK experiences a prominent increase in delays during bad weather, with arrival delays increasing by 13.48 minutes and departure delays by 9.5 minutes. Additionally, the data shows that EWR’s arrival delays increase by 8.04 minutes when bad weather conditions are present. Therefore, we find that EWR has the highest overall delays, and JFK is the most affected by bad weather conditions.
+
 
 ## **Conclusions**
 
