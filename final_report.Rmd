@@ -97,7 +97,7 @@ ggplot(seasonal_counts, aes(x = season, y = total_flights, fill = origin)) +
   theme_minimal()
 ```
 
-##### Analysis: 
+##### Analysis:
 
 In 2 out of the 3 examined airports, spring and summer tended to have the highest flight volumes, though this difference may not be significant enough to warrant any concrete conclusions as in LGA this trend does not reflect.
 
@@ -766,6 +766,19 @@ This test was appropriate for average delays, but could not be applied to flight
 
 For flight volume, the bar chart shows that EWR consistently has the highest flight volume across all seasons, with LGA having the lowest. Seasonally, Spring and Summer show higher flight volumes at JFK and EWR airports, while fall shows the highest flight volume in LGA.
 
+```{r lyd6, echo=FALSE}
+flights_clean <- read_rds("flights_clean.rds")
+# First sub dataset: Summarize average delays and flight volume by airport and season
+summary_stats <- flights_clean %>%
+  group_by(origin, season) %>%
+  summarise(
+    avg_delay = mean(avg_delay, na.rm = TRUE),  # Mean delay per group
+    flight_volume = n(),  # Number of flights (volume)
+    median_delay = median(avg_delay, na.rm = TRUE),
+    .groups = "drop"# Median delay for robustness
+  )
+```
+
 ```{r lyd3, echo=FALSE}
 summary_stats <- flights_clean %>%
   group_by(origin, season) %>%
@@ -895,8 +908,8 @@ dunnTest(arr_delay ~ group, data = flights_weather_filtered, method = "bonferron
 ```
 
 ##### Conclusion:
-To specifically pinpoint which airport was affected the most, we conducted a post-hoc Dunn’s Test to perform a pairwise comparison. Using this test, we found that JFK experiences a prominent increase in delays during bad weather, with arrival delays increasing by 13.48 minutes and departure delays by 9.5 minutes. Additionally, the data shows that EWR’s arrival delays increase by 8.04 minutes when bad weather conditions are present. Therefore, we find that EWR has the highest overall delays, and JFK is the most affected by bad weather conditions.
 
+To specifically pinpoint which airport was affected the most, we conducted a post-hoc Dunn’s Test to perform a pairwise comparison. Using this test, we found that JFK experiences a prominent increase in delays during bad weather, with arrival delays increasing by 13.48 minutes and departure delays by 9.5 minutes. Additionally, the data shows that EWR’s arrival delays increase by 8.04 minutes when bad weather conditions are present. Therefore, we find that EWR has the highest overall delays, and JFK is the most affected by bad weather conditions.
 
 ## **Conclusions**
 
