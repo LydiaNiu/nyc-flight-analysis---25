@@ -111,7 +111,4 @@ install.packages(c("tidyverse", "ggplot2", "ggpubr", "rstatix", "dunn.test", "gr
 * `nycflights13` dataset by the Tidyverse team
 * STAT 167 Instructors and TAs
 * RStudio and tidyverse packages
-
----
-
-Let me know if you want this exported as a markdown file!
+* AI tools such as ChatGTP and Grok for troubleshooting
